@@ -26,7 +26,7 @@ import (
 func main() {
 	currentTime, err := getTime()
 	if err != nil {
-		fmt.Println(os.Stderr, err)
+		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
 	fmt.Printf("Точное текущее время: %v", currentTime)
