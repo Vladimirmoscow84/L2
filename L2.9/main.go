@@ -33,10 +33,15 @@ package main
 
 import (
 	"errors"
+	"fmt"
+	"strconv"
+	"strings"
 	"unicode"
 )
 
 func main() {
+	a := "aaaaa"
+	fmt.Println(getUnpacking(a))
 
 }
 
@@ -45,25 +50,30 @@ func getUnpacking(data string) (string, error) {
 		return "", nil
 	}
 
-	var previos, current rune
-	result := make([]rune, 0)
+	var previos, result string
 	var count int
-	previosCharIsDigit := true
+	previosCharIsLetter := true
 
-	for _, v := range data {
-		if unicode.IsDigit(v) && previosCharIsDigit {
+	for i, v := range data {
+		if (unicode.IsDigit(v) && i == 0) || (unicode.IsDigit(v) && !previosCharIsLetter) {
 			err := errors.New("некорректная строка")
 			return "", err
 		}
-		previosCharIsDigit = false
-		if unicode.IsLetter(v) && !previosCharIsDigit {
-			previos = v
-			previosCharIsDigit = false
+		if unicode.IsLetter(v) {
+			result += previos
+			previos = string(v)
+			previosCharIsLetter = true
 			continue
 		}
-		if unicode.IsDigit(v) && !previosCharIsDigit {
 
+		if unicode.IsDigit(v) && previosCharIsLetter {
+			count, _ = strconv.Atoi(string(v))
+			result += strings.Repeat(previos, count)
+			previos = ""
+			previosCharIsLetter = false
+			continue
 		}
 	}
-
+	result += previos
+	return result, nil
 }
