@@ -40,7 +40,7 @@ import (
 )
 
 func main() {
-	a := "aaaaa"
+	a := "\\4"
 	fmt.Println(getUnpacking(a))
 
 }
@@ -53,9 +53,10 @@ func getUnpacking(data string) (string, error) {
 	var previos, result string
 	var count int
 	previosCharIsLetter := true
+	previosCharIsSlash := true
 
 	for i, v := range data {
-		if (unicode.IsDigit(v) && i == 0) || (unicode.IsDigit(v) && !previosCharIsLetter) {
+		if (unicode.IsDigit(v) && i == 0) || (unicode.IsDigit(v) && !previosCharIsLetter && !previosCharIsSlash) {
 			err := errors.New("некорректная строка")
 			return "", err
 		}
@@ -73,7 +74,20 @@ func getUnpacking(data string) (string, error) {
 			previosCharIsLetter = false
 			continue
 		}
+		if v == '\\' {
+			result += previos
+			previos = ""
+			previosCharIsSlash = true
+			continue
+		}
+		if unicode.IsDigit(v) && previosCharIsSlash {
+			previos = string(v)
+			previosCharIsLetter = true
+			previosCharIsSlash = false
+		}
+
 	}
+
 	result += previos
 	return result, nil
 }
