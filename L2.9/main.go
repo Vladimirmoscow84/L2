@@ -40,7 +40,8 @@ import (
 )
 
 func main() {
-	a := "\\4"
+	a := "\\4a3as4ffg\\42k3\\54"
+	fmt.Println("")
 	fmt.Println(getUnpacking(a))
 
 }
@@ -52,36 +53,48 @@ func getUnpacking(data string) (string, error) {
 
 	var previos, result string
 	var count int
-	previosCharIsLetter := true
+	previosCharIsDigit := true
 	previosCharIsSlash := true
+	previosCharIsLetter := true
 
-	for i, v := range data {
-		if (unicode.IsDigit(v) && i == 0) || (unicode.IsDigit(v) && !previosCharIsLetter && !previosCharIsSlash) {
+	for _, v := range data {
+		if unicode.IsDigit(v) && previosCharIsDigit {
 			err := errors.New("некорректная строка")
 			return "", err
-		}
-		if unicode.IsLetter(v) {
-			result += previos
-			previos = string(v)
-			previosCharIsLetter = true
-			continue
-		}
-
-		if unicode.IsDigit(v) && previosCharIsLetter {
-			count, _ = strconv.Atoi(string(v))
-			result += strings.Repeat(previos, count)
-			previos = ""
-			previosCharIsLetter = false
-			continue
 		}
 		if v == '\\' {
 			result += previos
 			previos = ""
 			previosCharIsSlash = true
+			previosCharIsLetter = true
+			previosCharIsDigit = false
 			continue
 		}
-		if unicode.IsDigit(v) && previosCharIsSlash {
+		if unicode.IsLetter(v) {
+			result += previos
 			previos = string(v)
+			previosCharIsDigit = false
+			previosCharIsLetter = true
+			previosCharIsSlash = false
+			continue
+		}
+
+		if unicode.IsDigit(v) && previosCharIsLetter {
+			if !previosCharIsSlash {
+				count, _ = strconv.Atoi(string(v))
+				result += strings.Repeat(previos, count)
+				previos = ""
+				previosCharIsLetter = false
+				previosCharIsDigit = true
+				previosCharIsSlash = false
+				continue
+			}
+		}
+
+		if unicode.IsDigit(v) && previosCharIsSlash {
+			result += previos
+			previos = string(v)
+			previosCharIsDigit = false
 			previosCharIsLetter = true
 			previosCharIsSlash = false
 		}
@@ -89,5 +102,6 @@ func getUnpacking(data string) (string, error) {
 	}
 
 	result += previos
+	fmt.Println(result)
 	return result, nil
 }
