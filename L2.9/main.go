@@ -40,9 +40,15 @@ import (
 )
 
 func main() {
-	a := "\\4a3as4ffg\\42k3\\54"
-	fmt.Println("")
-	fmt.Println(getUnpacking(a))
+	var a string
+	fmt.Println("введите корректную строки для распаковки")
+	fmt.Scan(&a)
+	answer, err := getUnpacking(a)
+	if answer == "" {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println("распакованная строка:", answer)
 
 }
 
@@ -59,7 +65,7 @@ func getUnpacking(data string) (string, error) {
 
 	for _, v := range data {
 		if unicode.IsDigit(v) && previosCharIsDigit {
-			err := errors.New("некорректная строка")
+			err := errors.New("вы ввели некорректную строку")
 			return "", err
 		}
 		if v == '\\' {
@@ -102,6 +108,5 @@ func getUnpacking(data string) (string, error) {
 	}
 
 	result += previos
-	fmt.Println(result)
 	return result, nil
 }
