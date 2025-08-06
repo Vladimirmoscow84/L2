@@ -62,13 +62,19 @@ func main() {
 	fmt.Printf("done after %v", time.Since(start))
 }
 
+// maybe приимает множесто каналов
 func maybe(chans ...<-chan interface{}) <-chan interface{} {
 
 	chDone := make(chan interface{})
 	chOut := make(chan interface{})
+
+	//в отдельных горутинах в цикле ожидание данных из каналов, переданных в функцию
 	for i := range chans {
 
 		go func(ch <-chan interface{}) {
+			// Когда один из переданных каналов закрывается, то данные из него
+			// передаются в канал out, одновременно с этим закрывается
+			// канал done. При закрытом done завершаем анонимные горутины.
 
 			select {
 			case signal := <-ch:
@@ -80,6 +86,7 @@ func maybe(chans ...<-chan interface{}) <-chan interface{} {
 
 		}(chans[i])
 	}
+	// Разблокировка горутины и отправка данных из первого закрытого канала
 	<-chDone
 	return chOut
 }
