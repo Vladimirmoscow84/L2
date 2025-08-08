@@ -33,6 +33,39 @@ type arguments struct {
 }
 
 func main() {
+	args, err := parseFlags()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	//в случае заданного ключа только с разделителем, а в строке нет разделителя - выход из программы
+	if args.s {
+		if !strings.Contains(args.input, args.d) {
+			return
+		}
+	}
+	//разделение строкина части по разделителю
+	sepString := strings.Split(args.input, args.d)
+	//проверка ключа на выбор полей и что строка разделена
+	if args.f != "" && len(sepString) > 1 {
+		nums, err := cmdDefinSelect(args, sepString)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		//вывод колонок в соответстви с условием
+		for i, v := range nums {
+			if i == len(nums)-1 {
+				fmt.Println(sepString[v])
+				return
+			}
+			fmt.Print(sepString[v] + args.d)
+		}
+
+	}
+	//в случае несрабатывания условий проверки выводится исходная строка
+	fmt.Println(args.input)
 
 }
 
@@ -84,18 +117,56 @@ func cmdDefinSelect(cmdArgs arguments, rows []string) (answer []int, err error) 
 				if err != nil {
 					return nil, fmt.Errorf("неверный номер колонки")
 				}
-				for i := 0; i< num; i++ {
-					if i>len(rows)-1{
+				for i := 0; i < num; i++ {
+					if i > len(rows)-1 {
 						return answer, nil
 					}
 					answer = append(answer, i)
 				}
 				continue
+				// Если "-" является последнием символом после числа,
+				// то берём все числа, пока последнее не станет равно номеру последней колонки,
+				// конвертируем их в числовое представление и добавляем в массив
 
-			}else if  {
-				
+			} else if strings.Index(v, "-") == 0 {
+				num, err = strconv.Atoi(strings.TrimSuffix(v, "-"))
+				if err != nil {
+					return nil, fmt.Errorf("неверный номер колонки")
+				}
+				for j := num - 1; j < len(rows); j++ {
+					answer = append(answer, j)
+				}
+				continue
+				// Если "-" находится между двумя числами,
+				// берём все числа в этом промежутке и конвертируем их числовое представление,а затем добавляем в массив
+			} else {
+				twoNums := strings.Split(v, "-")
+				one, err := strconv.Atoi(twoNums[0])
+				if err != nil {
+					return nil, err
+				}
+				two, err := strconv.Atoi(twoNums[1])
+				if err != nil {
+					return nil, err
+				}
+				for j := one - 1; j < two; j++ {
+					if j > len(rows)-1 {
+						return answer, nil
+					}
+					answer = append(answer, j)
+				}
+				continue
+
 			}
 		}
+		//Конвертируем строковое представление в числовое, в случае ошибки возвращаем её
+		num, err = strconv.Atoi(v)
+		if err != nil {
+			return nil, fmt.Errorf("колонка с номерром %d не существует", num)
+		}
+		//полученное число добавляем в массив
+		answer = append(answer, num-1)
 	}
+	return answer, nil
 
 }
