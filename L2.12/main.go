@@ -31,6 +31,60 @@
 
 package main
 
+import (
+	"flag"
+	"fmt"
+)
+
+// структура для предстаавлени аргументов командной мтроки
+type arguments struct {
+	A, B, C, idx           int
+	c, i, v, F, n          bool
+	oldMatch, match, input string
+}
+
+// ParseFlags распарсивает аргументы командной строки
+func parseFlags() (arguments, error) {
+	//определение перпеменных для хранения значений флагов
+	var count, i, v, f, n bool
+	var a, b, c int
+
+	// опредееление флагов командной строки и распарсивание ихи в перменнные
+	flag.BoolVar(&count, "c", false, "\"count\" (количество строк)")
+	flag.BoolVar(&i, "i", false, "\"ignore-case\" (игнорировать регистр)")
+	flag.BoolVar(&v, "v", false, "\"invert\" (вместо совпадения, исключать)")
+	flag.BoolVar(&f, "F", false, "\"fixed\", точное совпадение со строкой, не паттерн")
+	flag.BoolVar(&n, "n", false, "\"line num\", напечатать номер строки")
+	flag.IntVar(&a, "A", 0, "\"after\" печатать +N строк после совпадения")
+	flag.IntVar(&b, "B", 0, "\"before\" печатать +N строк до совпадения")
+	flag.IntVar(&c, "C", 0, "\"context\" (A+B) печатать ±N строк вокруг совпадения")
+	flag.Parse()
+	match := flag.Arg(0)
+	input := flag.Arg(1)
+
+	//проверка на валидность имен для файлов чтения данных
+	if input == "" && match == "" {
+		return arguments{}, fmt.Errorf("имя файла или искомая строка отсутствуют")
+	}
+
+	//инициализация экземпляра структуры с аргументами командной строки и инндексом вхождения
+	args := arguments{
+		A:        a,
+		B:        b,
+		C:        c,
+		c:        count,
+		i:        i,
+		v:        v,
+		F:        f,
+		n:        n,
+		oldMatch: match,
+		match:    match,
+		input:    input,
+		idx:      -1,
+	}
+	return args, nil
+}
+
 func main() {
 
 }
