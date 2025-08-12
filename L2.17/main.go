@@ -18,6 +18,110 @@
 */
 package main
 
+import (
+	"bufio"
+	"flag"
+	"fmt"
+	"net"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+)
+
+type connection struct {
+	host, port string
+	timeout    time.Duration
+}
+
+// parseFflags - распарсивает аргументы командной строки
+func parseFflags() (connection, error) {
+	//переменные для хранения значений флага
+	var h, p string
+	var t time.Duration
+
+	//флаги командной строки
+	flag.DurationVar(&t, "timeout", 10*time.Second, "Таймаут соединения")
+	flag.Parse()
+	if len(flag.Args()) != 2 {
+		return connection{}, fmt.Errorf("неверное количество аргументов командной строки")
+	}
+	h = flag.Arg(0)
+	p = flag.Arg(1)
+
+	args := connection{
+		host:    h,
+		port:    p,
+		timeout: t,
+	}
+	return args, nil
+}
+
+// подключение к серверу
+func (c *connection) client() error {
+	con, err := net.DialTimeout("tcp", c.host+":"+c.port, c.timeout)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		//при выходе из программы закрываем соединение
+		fmt.Println("Закрытие соединения")
+		con.Close()
+	}()
+
+	//инрициализирование канала для сигналов ОС и отлова ошибок
+	sysCh, errCh := make(chan os.Signal), make(chan error)
+
+	signal.Notify(sysCh, syscall.SIGINT)
+
+	//чтение сообщений от хоста
+	reader, err := bufio.NewReader(con).ReadString('\n')
+	if err != nil {
+		return err
+	}
+	fmt.Println(reader)
+	scanner := bufio.NewScanner(os.Stdin)
+
+	//получение сообщений со стандартонго ввода и отправка их хосту, где они будут преобразованы
+	go func() {
+		for scanner.Scan() {
+			_, err := con.Write([]byte(scanner.Text() + "\n"))
+			if err != nil {
+				errCh <- err
+				close(errCh)
+				break
+			}
+			l, err := bufio.NewReader(con).ReadString('\n')
+			if err != nil {
+				errCh <- err
+				close(errCh)
+				break
+			}
+			os.Stdout.Write([]byte(l))
+		}
+	}()
+
+	select {
+	case <-sysCh:
+		fmt.Println("получен сигнал")
+		return nil
+	case err := <-errCh:
+		return err
+
+	}
+	return nil
+}
+
 func main() {
+	con, err := parseFflags()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	err = con.client()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 }
