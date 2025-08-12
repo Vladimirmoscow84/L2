@@ -21,11 +21,14 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"strings"
+
+	"github.com/opesun/goquery"
 )
 
 // downloadWebsite - скачивает статические ресурсы вэбсайта
@@ -57,6 +60,63 @@ func downloadWebsite(site string) error {
 	return nil
 }
 
-func main() {
+// downloadResources -  загружает изображения и описания внешнего вида сайта
+func downloadResources(fileName string, url string) error {
+	// получение данных по URL
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
 
+	// Создание файлф с переданным именем и запись в него полученных данных
+	out, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	return err
+}
+
+// parseWebsite - парсит ресурсы вэбсайта
+func parseWebsite(site string) error {
+	data, err := goquery.ParseUrl(site)
+	if err != nil {
+		return err
+	}
+	for _, url := range data.Find("").Attrs("href") {
+		var str []string
+		switch {
+		case strings.Contains(url, ".png"):
+			str = strings.Split(url, "/")
+			downloadResources(str[len(str)-1], url)
+		case strings.Contains(url, ".jpg"):
+			str = strings.Split(url, "/")
+			downloadResources(str[len(str)-1], url)
+		case strings.Contains(url, ".css"):
+			str = strings.Split(url, "/")
+			downloadResources(str[len(str)-1], url)
+		}
+	}
+	return nil
+}
+
+func main() {
+	url := flag.String("s", "https://gazeta.ru", "site url")
+	flag.Parse()
+	if strings.Contains(*url, "https://") || strings.Contains(*url, "http://") {
+		if err := downloadWebsite(*url); err != nil {
+			fmt.Println(err)
+			return
+		}
+		if err := parseWebsite(*url); err != nil {
+			fmt.Println(err)
+			return
+		}
+	} else {
+		fmt.Println("invalid url")
+		return
+	}
 }
