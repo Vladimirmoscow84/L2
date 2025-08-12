@@ -170,6 +170,114 @@ func delString(args *arguments, data []string) {
 
 }
 
-func main() {
+// afterString - выводит заданное кол-во строк после искомого слова
+func afterString(args *arguments, data []string) {
+	fmt.Println()
+	fmt.Printf("-A:\n\tСтроки после совпадения с '%s':\n", args.oldMatch)
+	data = data[args.idx+1:]
+	for i, val := range data {
+		fmt.Println(val)
+		if i == args.A-1 {
+			break
+		}
+	}
+	fmt.Println()
+}
 
+// beforeString - выводит заданное кол-во строк перед искомым словом
+func beforeString(args *arguments, data []string) {
+	fmt.Println()
+	fmt.Printf("-B:\n\tСтроки перед совпадением с '%s':\n", args.oldMatch)
+	data = data[:args.idx]
+	for i := len(data) - 1; i >= 0; i-- {
+		fmt.Println(data[i])
+		args.B--
+		if args.B == 0 {
+			break
+		}
+	}
+	fmt.Println()
+}
+
+// beforeAfterString - выводит заданое кол-во строк перед и после искомого слова
+func beforeAfterString(args *arguments, data []string) {
+	fmt.Println()
+	// Если количество строк в аргументе превышает длину массива строк,
+	// то ограничиваем это количество длинной массива
+	var countRows = args.C
+	if args.C > len(data[:args.idx]) {
+		countRows = len(data[:args.idx])
+	}
+	// Выводим сначала строки до вхождения, a затем после
+	rowsAround := data[args.idx-(countRows) : args.idx]
+	for _, v := range rowsAround {
+		fmt.Println(v)
+	}
+	fmt.Printf("-C:\tСтроки вокруг совпадения с '%s':\n", args.oldMatch)
+	countRows = args.C
+	if args.C > len(data[args.idx+1:]) {
+		countRows = len(data[args.idx+1:])
+	}
+	rowsAround = data[args.idx+1 : args.idx+countRows+1]
+	for _, v := range rowsAround {
+		fmt.Println(v)
+	}
+	fmt.Println()
+}
+func main() {
+	args, err := parseFlags()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	data, err := openFile(&args)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	if args.F {
+		fullCoicidenceString(&args, data)
+	} else {
+		findPostString(&args, data)
+	}
+
+	if args.n {
+		if args.idx >= 0 {
+			fmt.Println()
+			fmt.Printf("-n:\n\tПозиция строки '%s': %d\n", args.oldMatch, args.idx+1)
+			fmt.Println()
+		} else {
+			fmt.Println()
+			fmt.Printf("-n:\n\tСтрока '%s' не найдена\n", args.oldMatch)
+			fmt.Println()
+		}
+	}
+	if args.c {
+		count := countRepString(&args, data)
+		fmt.Println()
+		fmt.Printf("-c:\n\tКоличество строк, содержащих '%s': %d\n", args.oldMatch, count)
+		fmt.Println()
+	}
+	if args.v {
+		if args.idx >= 0 {
+			delString(&args, data)
+			return
+		} else {
+			fmt.Println()
+			fmt.Printf("-v:\n\tСтрока '%s' не найдена\n", args.oldMatch)
+			fmt.Println()
+			return
+		}
+	}
+	if args.A > 0 && args.idx >= 0 {
+		afterString(&args, data)
+	}
+	// Если передан аргумент B, то выводим необходимое количество строк перед совпадением
+	if args.B > 0 && args.idx >= 0 {
+		beforeString(&args, data)
+	}
+	// Если передан аргумент C, то выводим строки до и после совпадения
+	if args.C > 0 && args.idx >= 0 {
+		beforeAfterString(&args, data)
+	}
 }
