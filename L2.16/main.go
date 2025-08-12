@@ -20,6 +20,11 @@
 
 package main
 
+//downloadWebsite - скачивает статические ресурсы вэбсайта
+func downloadWebsite(site string) error {
+
+}
+
 func main() {
 
 }
