@@ -32,8 +32,11 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"os"
+	"strings"
 )
 
 // структура для предстаавлени аргументов командной мтроки
@@ -49,7 +52,7 @@ func parseFlags() (arguments, error) {
 	var count, i, v, f, n bool
 	var a, b, c int
 
-	// опредееление флагов командной строки и распарсивание ихи в перменнные
+	// опредееление флагов командной строки и распарсивание их в перменнные
 	flag.BoolVar(&count, "c", false, "\"count\" (количество строк)")
 	flag.BoolVar(&i, "i", false, "\"ignore-case\" (игнорировать регистр)")
 	flag.BoolVar(&v, "v", false, "\"invert\" (вместо совпадения, исключать)")
@@ -83,6 +86,88 @@ func parseFlags() (arguments, error) {
 		idx:      -1,
 	}
 	return args, nil
+}
+
+// openFile - открывает и читает файл, возвращая считанный массив, в соответствии с заданным флагом
+func openFile(args *arguments) ([]string, error) {
+	file, err := os.Open(args.input)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	data := make([]string, 0)
+	scanner := bufio.NewScanner(file)
+
+	//при считывании данных определяем флаг i, если он есть, топриводим все данные к нижнему регситру
+	if args.i {
+		args.match = strings.ToLower(args.match)
+		for scanner.Scan() {
+			l := strings.ToLower(scanner.Text())
+			data = append(data, l)
+		}
+		return data, nil
+	}
+	for scanner.Scan() {
+		l := scanner.Text()
+		data = append(data, l)
+	}
+	return data, nil
+
+}
+
+// fullCoicidenceString - ищет строку по полному совпадению
+func fullCoicidenceString(args *arguments, data []string) {
+	for i, val := range data {
+		if val == args.match {
+			args.idx = i
+			break
+		}
+	}
+}
+
+// findPostString - ищет позицию строки в переданных данных
+func findPostString(args *arguments, data []string) {
+	for i, val := range data {
+		if strings.Contains(val, args.match) {
+			args.idx = i
+			break
+		}
+	}
+}
+
+// countRepString- считает кол-во повторений строки в данных
+func countRepString(args *arguments, data []string) int {
+	count := 0
+	for _, val := range data {
+		if strings.Contains(val, args.match) {
+			count++
+		}
+	}
+	return count
+}
+
+// delString - удаляет строку из данных
+func delString(args *arguments, data []string) {
+	//если есть флаг -F
+	if args.F {
+		for i, val := range data {
+			if strings.Contains(val, args.match) {
+				data = append(data[:i], data[i+1:]...)
+			}
+		}
+		//если нет флага -F
+	} else {
+		for i, val := range data {
+			if strings.Contains(val, args.match) {
+				data[i] = strings.ReplaceAll(val, args.match, "")
+			}
+		}
+	}
+	fmt.Println()
+	fmt.Printf("-v:\n\tДанные после удаления строки '%s':\n%s\n", args.oldMatch, strings.Join(data, "\n"))
+	fmt.Println()
+
 }
 
 func main() {
