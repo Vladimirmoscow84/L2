@@ -20,9 +20,41 @@
 
 package main
 
-//downloadWebsite - скачивает статические ресурсы вэбсайта
+import (
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+	"strings"
+)
+
+// downloadWebsite - скачивает статические ресурсы вэбсайта
 func downloadWebsite(site string) error {
 
+	//запрос на сайт
+	response, err := http.Get(site)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	//проверка успешности запроса по статускоду
+	if response.StatusCode != http.StatusOK {
+		return fmt.Errorf("неверный ответ сайта, код ответа: %d\n", response.StatusCode)
+	}
+
+	//запись тела запроса в html файл
+	filename := strings.Split(site, "/")[2] + ".html"
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	_, err = io.Copy(file, response.Body)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func main() {
