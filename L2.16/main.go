@@ -40,7 +40,7 @@ func downloadWebsite(site string) error {
 
 	//проверка успешности запроса по статускоду
 	if response.StatusCode != http.StatusOK {
-		return fmt.Errorf("неверный ответ сайта, код ответа: %d\n", response.StatusCode)
+		return fmt.Errorf("неверный ответ сайта, код ответа: %v", response.StatusCode)
 	}
 
 	//запись тела запроса в html файл
