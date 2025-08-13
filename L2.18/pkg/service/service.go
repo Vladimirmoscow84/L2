@@ -3,16 +3,17 @@ package service
 import (
 	"errors"
 	"strings"
+	"sync"
 	"time"
 )
 
 // event - структура события
-type event struct {
-	EventId int
-	UserId  int
-	Title   string
-	Note    string
-	Date    Date
+type Event struct {
+	EventId int    `json:"event_id,omitempty"`
+	UserId  int    `json:"usser_id"`
+	Title   string `json:"title"`
+	Notice  string `json:"notice"`
+	Date    Date   `json:"date"`
 }
 
 // Date - структура для распарсивания дат, введенных пользователем
@@ -42,4 +43,22 @@ func (t *Date) UnmarshalJSON(data string) error {
 	*t = Date{parsTime}
 	return nil
 
+}
+
+// Result - структура для вывода результата запроса
+type Result struct {
+	Message string  `json:"message"`
+	Results []Event `json:"results"`
+}
+
+// Storage - структура, в которой хрантся события
+type Storage struct {
+	storageResults map[int]*Event
+	numberEvent    int
+	mu             *sync.RWMutex
+}
+
+// errMessage  - структура для вывода ошибки запроса
+type errMessage struct {
+	Error string `json:"error"`
 }
