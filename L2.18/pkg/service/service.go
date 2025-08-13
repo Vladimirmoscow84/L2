@@ -51,7 +51,7 @@ type Result struct {
 	Results []Event `json:"results"`
 }
 
-// Storage - структура, в которой хрантся события
+// Storage - структура, в которой хранятся события
 type Storage struct {
 	storageResults map[int]*Event
 	numberEvent    int
@@ -61,4 +61,13 @@ type Storage struct {
 // errMessage  - структура для вывода ошибки запроса
 type errMessage struct {
 	Error string `json:"error"`
+}
+
+// NewStorage - конструктор для storage
+func NewStorage() Storage {
+	return Storage{
+		storageResults: make(map[int]*Event),
+		numberEvent:    1,
+		mu:             new(sync.RWMutex),
+	}
 }
