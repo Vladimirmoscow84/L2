@@ -70,7 +70,7 @@ func (c *connection) client() error {
 	}()
 
 	//инрициализирование канала для сигналов ОС и отлова ошибок
-	sysCh, errCh := make(chan os.Signal), make(chan error)
+	sysCh, errCh := make(chan os.Signal, 1), make(chan error)
 
 	signal.Notify(sysCh, syscall.SIGINT)
 
