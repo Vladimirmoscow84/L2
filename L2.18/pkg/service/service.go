@@ -23,14 +23,14 @@ type Date struct {
 }
 
 // UnmarshalJSON - парсит переданные пользователем даты
-func (t *Date) UnmarshalJSON(data string) error {
+func (t *Date) UnmarshalJSON(data []byte) error {
 
-	if data == "" || data == `""` {
+	if string(data) == "" || string(data) == `""` {
 		*t = Date{time.Now()}
 		return nil
 	}
 
-	timeStr := strings.ReplaceAll(data, `"`, "")
+	timeStr := strings.ReplaceAll(string(data), `"`, "")
 	parsTime, err := time.Parse("2006-01-02T15:04", timeStr)
 	if err != nil {
 		parsTime, err = time.Parse("2006-01-02T15:04:00Z", timeStr)
