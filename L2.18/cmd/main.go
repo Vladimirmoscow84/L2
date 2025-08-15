@@ -50,6 +50,24 @@ Middleware логирования
 
 package main
 
-func main() {
+import (
+	"flag"
+	"log"
+	"net/http"
 
+	"L2.18/pkg/server"
+)
+
+func main() {
+	port := flag.String("port", "8080", "port's number")
+	flag.Parse()
+	mux := http.NewServeMux()
+	handler := server.Newhandler()
+	handler.Routers(mux)
+	loggedRouter := server.Logging(mux)
+	log.Printf("Сервер запущен на порте %s\n", *port)
+	err := http.ListenAndServe("localhost:"+*port, loggedRouter)
+	if err != nil {
+		log.Fatalln(err)
+	}
 }
