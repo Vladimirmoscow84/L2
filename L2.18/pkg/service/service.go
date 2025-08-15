@@ -56,7 +56,7 @@ type Result struct {
 type Storage struct {
 	storageEvents map[int]*Event
 	numberEvent   int
-	mu            *sync.RWMutex
+	mu            sync.RWMutex
 }
 
 // errMessage  - структура для вывода ошибки запроса
@@ -69,7 +69,7 @@ func NewStorage() Storage {
 	return Storage{
 		storageEvents: make(map[int]*Event),
 		numberEvent:   1,
-		mu:            new(sync.RWMutex),
+		mu:            sync.RWMutex{},
 	}
 }
 
@@ -80,6 +80,7 @@ func (s *Storage) CreateEvent(e *Event) {
 	s.storageEvents[e.EventId] = e
 	s.numberEvent++
 	s.mu.Unlock()
+
 }
 
 // UpdateEvent - обновляет событие в хранилище
