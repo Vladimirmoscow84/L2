@@ -60,7 +60,7 @@ type Storage struct {
 }
 
 // errMessage  - структура для вывода ошибки запроса
-type errMessage struct {
+type ErrMessage struct {
 	Error string `json:"error"`
 }
 
